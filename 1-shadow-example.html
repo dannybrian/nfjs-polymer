@@ -1,0 +1,26 @@
+<template>
+  <style>
+    * { color: red }
+    ::content p {
+      font-weight: bold;
+    }
+  </style> 
+  <div class='slide'>
+    <content select='p'></content>
+  </div>
+</template>
+
+<p>Hi!</p>
+
+<div class='container'>
+  <p>The content!</p>
+  <p>The content 2!</p>
+</div>
+
+<script>
+  var template = document.querySelector('template');
+  var host = document.querySelector('.container');
+  var root = host.createShadowRoot();
+  root.appendChild(document.importNode(template.content, true));
+</script>
+

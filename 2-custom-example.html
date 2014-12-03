@@ -1,0 +1,39 @@
+<template>
+
+  <style>
+    * { color: red }
+    ::content p {
+      font-weight: bold;
+    }
+  </style> 
+
+  <div class='slide'>
+    <content select='p'></content>
+  </div>
+
+</template>
+
+<p>Hi!</p>
+<our-test>
+  <p>The content!</p>
+</out-test>
+
+<script>
+  var template = document.querySelector('template');
+
+  // extend HTMLElement with our own prototype
+  var ourProto = Object.create(HTMLElement.prototype);
+
+  // give our prototype a callback to create our shadow root 
+  // and populate it with content
+  ourProto.createdCallback = function() {
+    var root = this.createShadowRoot();
+    root.appendChild(document.importNode(template.content, true));
+  };
+
+  // register the custom element 
+  var ourElement = document.registerElement('our-test', {
+     prototype: ourProto
+  });
+</script>
+

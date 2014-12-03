@@ -1,0 +1,239 @@
+<script>
+  "use strict";
+  window.beadRadius = 50;
+
+  window.mixins = {
+      
+    manip: {
+        addClass: function (tclass) {
+            return this.classList.add(tclass);
+        },
+
+        removeClass: function (tclass) {
+            return this.classList.remove(tclass);
+        },
+
+        toggleClass: function (tclass) {
+            return this.classList.toggle(tclass);
+        },
+
+        hasClass: function (tclass) {
+            return this.classList.contains(tclass);
+        },
+    },
+    
+    button: {
+        hover: function (bool) {
+            bool ? this.addClass('hover') : this.removeClass('hover');
+        },
+
+        press: function (bool) {
+            bool ? this.addClass('pressed') : this.removeClass('pressed');
+        },
+    },
+    
+    // movables, stuff that can have its position set
+    movable: {
+        getPos: function () {
+            return { x: this.x, y: this.y };
+        },
+
+        setPos: function (x, y, now) {
+            this.x = x;
+            this.y = y;
+            if (now) {
+                this.commitPos();
+            }
+        },
+
+        commitPos: function () {
+            // apply whatever is set for this.
+            var transform =
+                "translate3d(" + (this.x - window.beadRadius) + "px," + (this.y - window.beadRadius) + "px, 0) "
+                // "translate(" + cache.posX + "px," + cache.posY + "px) "
+                // + rotation
+                + "scale3d(" + this.scale + "," + this.scale + ", 1)";
+                // + "scale(" + cache.scale + ")";
+            this.style.transform = transform;
+            this.style.oTransform = transform;
+            this.style.msTransform = transform;
+            this.style.mozTransform = transform;
+            this.style.webkitTransform = transform;
+            // console.log(transform);
+        },
+
+        x: 0,
+        y: 0,
+        scale: 1
+        
+    },
+
+    draggable: {
+
+        touch: function (ev) {
+            // console.log(ev);
+            // put this bead at the top zindex.
+            this.panning = true;
+            this.repulse = 0.05;
+            this.fire('bead-touch', { });
+            this.addClass('ztop');
+        },
+
+        touchend: function (ev) {
+            this.panning = false;
+            this.repulse = 0.4;
+            this.removeClass('ztop');
+        },
+        
+        draginit: function () {
+            var self = this;
+            
+            this.addEventListener('touchstart', function(ev) {
+                self.touch(ev);
+            });
+
+            this.addEventListener('mousedown', function(ev) {
+                self.touch(ev);
+            });
+
+            this.addEventListener('touchend', function(ev) {
+                self.touchenv(ev);
+            });
+            
+            this.addEventListener('mouseup', function(ev) {
+                self.touchend(ev);
+            });
+            
+            // this._ht.get('pan').set({ threshold: 2 });
+            this._ht = new Hammer(this, { threshold: 2 } );
+            
+            this._ht.on('tap', function(ev) {
+                //console.log(ev);
+                self.tap();
+            });
+
+            this._ht.on('pan', function(ev) {
+                //console.log(ev);
+                self.setPos(ev.center.x, ev.center.y, true);
+                self.fire('bead-pan', { });
+            });
+
+            this._ht.on('panend', function(ev) {
+                //console.log(ev);
+                self.touchend(ev);
+            });
+    
+        }
+
+      },
+      
+      forcegraph: {
+
+        initEnergy: 5, // initial graph energy
+        speed: 0.8,      // how quickly things move
+        tick: 10, // speed of the update interval
+        t: 5, // current energy
+        C: 0,
+        k: 0, // k is the optimal distance between vertice
+        optimal: function () { this.k = this.C * Math.sqrt(this.width / this.count); },
+        cool:    function () { this.t -= (this.t * 0.03) }, // this is the cooling decay function
+        resetGraph:   function () { this.t = this.initEnergy; }, // reset the energy
+        setC:    function () { this.C = (Math.log(this.count) / 3) * (beadRadius / 2); }, // tweakable constant
+        midx:    window.innerWidth / 2,
+        midy:    window.innerHeight / 2,
+        count: 2,
+        width:   window.innerWidth,  
+        height:  window.innerHeight,
+        area: this.width * this.height,
+
+        setArea: function () {
+            this.width = window.innerWidth;
+            this.height = window.innerHeight;
+            this.midx = window.innerWidth / 2;
+            this.midy = window.innerHeight / 2;
+            this.area = this.width * this.height;
+            this.setC();
+            this.optimal();
+        },
+
+        setCount: function (ccount) {
+            // THIS CAN'T BE < 2!!
+            if (ccount < 5) { ccount = 5; } // 4 keeps few beads from clumping too much.
+            this.count = ccount;
+            this.setC();
+            this.optimal();
+        },
+
+        // repulse function
+        repulse: function (d) {
+            return ((-(this.k) * -(this.k)) / d);
+        },
+
+        // alt repulse function (testing)
+        repulse2: function (d) {
+            return ((-(this.k) * -(this.k)) / d) * 1.4;
+        },
+
+        force: function (verts) {
+            
+            // repulsion: iterate for each vertex for computation
+            for (var v = 0; v < verts.length; v++) {
+                if (verts[v].ignore) { continue; }
+                verts[v].newx = this.midx;
+                verts[v].newy = this.midy;
+
+                for (var u = 0; u < verts.length; u++) {
+                    if (u != v) {
+                        // console.log(u);
+                        if (verts[u].ignore) { continue; }
+                        
+                        // delta = difference vector
+                        var deltax = verts[v].x - verts[u].x;
+                        var deltay = verts[v].y - verts[u].y;
+                        var deltal = Math.sqrt((deltax * deltax) + (deltay * deltay));
+                        var repulse = this.repulse(deltal) * verts[v].repulse;
+
+                        verts[v].newx = ( Number(verts[v].newx) + (deltax / deltal) * repulse );
+                        verts[v].newy = ( Number(verts[v].newy) + (deltay / deltal) * repulse );
+
+                    }
+                }
+            }
+
+            for (var v = 0; v < verts.length; v++) {
+                var deltax = verts[v].newx - verts[v].x;
+                var deltay = verts[v].newy - verts[v].y;
+
+                var deltal = Math.sqrt((deltax * deltax) + (deltay * deltay));
+
+                if (deltal != 0) {
+                    //console.log(this.t);
+                    verts[v].newx = ( Number(verts[v].x) + (deltax / deltal * this.speed) * Math.min( deltal, this.t ) );
+                    verts[v].newy = ( Number(verts[v].y) + (deltay / deltal * this.speed) * Math.min( deltal, this.t ) );
+
+                    verts[v].newx = Math.min(this.width - 1, Math.max(1, verts[v].newx));
+                    verts[v].newy = Math.min(this.height - 1, Math.max(1, verts[v].newy));
+
+                    if (!verts[v].panning) {
+                        verts[v].setPos(verts[v].newx, verts[v].newy, true);
+                    }
+                }
+            }
+
+            this.cool();
+        }, // force
+
+
+        moveBeads: function () {
+            var self = this;
+            // force direct and move beads to their new locations.
+
+            setInterval(function() {
+                self.force(self.$.beadlist.querySelectorAll('gbn-bead'));
+            }, self.tick)
+        },
+          
+      }, // forcegraph
+
+  };
+</script>
