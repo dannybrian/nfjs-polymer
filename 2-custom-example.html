@@ -1,35 +1,47 @@
-<template>
-
-  <style>
-    * { color: red }
-    ::content p {
-      font-weight: bold;
+<style>
+    our-test {
+        color: red;
     }
-  </style> 
+    [type="himom"] {
+        font-weight: bold;
+    }
+</style>
 
-  <div class='slide'>
-    <content select='p'></content>
-  </div>
-
-</template>
-
-<p>Hi!</p>
-<our-test>
+<our-test type="himom">
   <p>The content!</p>
-</out-test>
+</our-test>
 
 <script>
-  var template = document.querySelector('template');
-
   // extend HTMLElement with our own prototype
   var ourProto = Object.create(HTMLElement.prototype);
 
   // give our prototype a callback to create our shadow root 
   // and populate it with content
   ourProto.createdCallback = function() {
-    var root = this.createShadowRoot();
-    root.appendChild(document.importNode(template.content, true));
+    // var root = this.createShadowRoot();
+    // root.appendChild(document.importNode(template.content, true));
+    console.log("created");
   };
+    
+  ourProto.attachedCallback = function() {
+    // called when element is inserted into the DOM
+    // good place to add event listeners
+      console.log("attached");
+  };
+
+  ourProto.detachedCallback = function() {
+    // called when element is removed from the DOM
+    // good place to remove event listeners
+      console.log("detached");
+  };
+
+  ourProto.attributeChangedCallback = function(name, oldVal, newVal) {
+    // make changes based on attribute changes
+    console.log("attribute changed");
+  };
+
+  // Add a public method
+  ourProto.doSomething = function() { };
 
   // register the custom element 
   var ourElement = document.registerElement('our-test', {

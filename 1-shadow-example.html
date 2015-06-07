@@ -6,15 +6,16 @@
     }
   </style> 
   <div class='slide'>
-    <content select='p'></content>
+    <content select='[data-test="yes"]'></content>
   </div>
 </template>
 
 <p>Hi!</p>
 
 <div class='container'>
-  <p>The content!</p>
+  <p data-test="yes">The content!</p>
   <p>The content 2!</p>
+  <div>Am I here?</div>
 </div>
 
 <script>

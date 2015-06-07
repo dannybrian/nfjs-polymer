@@ -1,2 +1,21 @@
-<link rel="import" href="2-custom-example.html">
+<link rel="import" href="1-shadow-example.html">
 
+<div id="container"/>
+
+<script>
+    var content = document.querySelector('link[rel="import"]').import;
+    console.log(content.querySelector('template'));
+    document.querySelector('#container').appendChild(content.querySelector('template'));
+
+    // importDoc references this import's document
+    // var importDoc = document.currentScript.ownerDocument;
+
+    // mainDoc references the main document (the page that's importing us)
+    // var mainDoc = document;
+
+    // Grab the first stylesheet from this import, clone it,
+    // and append it to the importing document.
+    // var styles = importDoc.querySelector('link[rel="stylesheet"]');
+    // mainDoc.head.appendChild(styles.cloneNode(true));
+
+</script>
