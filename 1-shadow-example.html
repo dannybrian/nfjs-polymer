@@ -1,12 +1,16 @@
+
 <template>
   <style>
     * { color: red }
     ::content p {
       font-weight: bold;
     }
+    [data-test="yes"] {
+
+    }
   </style> 
   <div class='slide'>
-    <content select='[data-test="yes"]'></content>
+      <content select='p,div'></content>
   </div>
 </template>
 

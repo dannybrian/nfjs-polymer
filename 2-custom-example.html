@@ -41,7 +41,9 @@
   };
 
   // Add a public method
-  ourProto.doSomething = function() { };
+  ourProto.doSomething = function() { 
+    console.log("something");
+  };
 
   // register the custom element 
   var ourElement = document.registerElement('our-test', {

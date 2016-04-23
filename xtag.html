@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+    <head>
+        <title>beadga.me</title>
+        <script src="node_modules/x-tag/dist/x-tag-core.min.js"></script>
+        <script>
+            xtag.register('x-clock', {
+              lifecycle: {
+                created: function(){
+                  this.start();
+                }
+              },
+              methods: {
+                start: function(){
+                  this.update();
+                  this.xtag.interval = setInterval(this.update.bind(this), 1000);
+                },
+                stop: function(){
+                  this.xtag.interval = clearInterval(this.xtag.interval);
+                },
+                update: function(){
+                  this.textContent = new Date().toLocaleTimeString();
+                }
+              },
+              events: {
+                tap: function(){
+                  if (this.xtag.interval) this.stop();
+                  else this.start();
+                }
+              }
+            });
+        </script>
+    </head>
+    <body>
+        <x-clock></x-clock>
+    </body>
+</html>
