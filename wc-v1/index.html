@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- # bower install --save webcomponents/webcomponentsjs -->
+
+<html>
+  <head>
+      
+    <title>beadga.me</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    
+    <body>
+        <template id="bead-template">
+            
+            <style>
+                ::slotted(p) {
+                    transition: background-color 200ms, color 200ms;
+                }
+                :host(.light) ::slotted(p) {
+                    background-color: #ddd;
+                    color: #fff;
+                }
+                :host(.dark) ::slotted(p) {
+                    background-color: #333;
+                    color: #fff;
+                }
+            </style>
+            
+            <slot></slot>
+            
+        </template>
+        
+        <p style="background-color: #666;">Hi!</p>
+        
+        <gbn-bead class="light"><p>Hi!</p></gbn-bead>
+        
+        <gbn-bead class="dark"><p>Hi!</p></gbn-bead>
+
+    </body>
+      
+      <script>
+        var template = document.getElementById("bead-template");
+        
+        class GBNBead extends HTMLElement {
+            constructor() {
+                super(); // always call super() first in the ctor.
+
+                const shadowRoot = this.attachShadow({mode: 'open'});
+                shadowRoot.appendChild(template.content.cloneNode(true));
+                
+                this.addEventListener('click', e => {
+                    this.toggleTheme(); // no self
+                });
+                
+                this._theme = this.getAttribute("class");
+                
+            }
+
+            toggleTheme () {
+                this._theme = (this._theme === "dark") ? "light" : "dark";
+                this.setAttribute("class", this._theme);
+            }
+            
+        }
+          
+        window.customElements.define('gbn-bead', GBNBead);
+          
+      </script>
+      
+  </head>
+</html>
